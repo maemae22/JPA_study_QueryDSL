@@ -665,4 +665,21 @@ public class QuerydslBasicTest {
         }
     }
 
+    @Test
+    public void distinct() {
+
+        em.persist(new Member("member1"));
+        em.persist(new Member("member2"));
+        em.persist(new Member("member2"));
+        em.persist(new Member("member5"));
+
+        List<String> usernames = queryFactory
+                .select(member.username).distinct()
+                .from(member)
+                .fetch();
+
+        assertThat(usernames)
+                .containsExactly("member1", "member2", "member3", "member4", "member5");
+    }
+
 }
