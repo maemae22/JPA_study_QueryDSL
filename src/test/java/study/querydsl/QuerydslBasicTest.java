@@ -4,7 +4,9 @@ import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.ExpressionUtils;
+import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.JPAExpressions;
@@ -710,6 +712,41 @@ public class QuerydslBasicTest {
                 .selectFrom(member)
                 .where(builder)
                 .fetch();
+    }
+
+    @Test
+    public void dynamicQuery_WhereParam() {
+
+//        String usernameParam = "member1";
+        String usernameParam = null;
+        Integer ageParam = 10;
+
+        List<Member> result = searchMember2(usernameParam, ageParam);
+        assertThat(result.size()).isEqualTo(1);
+    }
+
+    private List<Member> searchMember2(String usernameCond, Integer ageCond) {
+
+        return queryFactory
+                .selectFrom(member)
+                .where(usernameEq(usernameCond), ageEq(ageCond))
+//                .where(allEq(usernameCond, ageCond))
+                .fetch();
+    }
+
+    private BooleanExpression usernameEq(String usernameCond) {
+        return usernameCond == null ? null : member.username.eq(usernameCond);
+    }
+
+    private BooleanExpression ageEq(Integer ageCond) {
+        return ageCond == null ? null : member.age.eq(ageCond);
+    }
+
+    // 이런식으로 메서드를 연결할 수 있음
+    // 이렇게 할 경우, null 처리를 반드시 해주어야 한다. (지금은 안되어있는 상태)
+    // 이렇게 null 처리를 안했을 경우에, username이 null로 들어올 경우 usernameEq(usernameCond)==null이 되므로 NullPointerException이 발생한다.
+    private BooleanExpression allEq(String usernameCond, Integer ageCond) {
+        return usernameEq(usernameCond).and(ageEq(ageCond));
     }
 
 }
