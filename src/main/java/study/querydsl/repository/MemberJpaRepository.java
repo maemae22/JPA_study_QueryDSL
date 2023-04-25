@@ -1,10 +1,16 @@
 package study.querydsl.repository;
 
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.Order;
+import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.PathBuilder;
+import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 import study.querydsl.dto.MemberSearchCondition;
@@ -161,4 +167,22 @@ public class MemberJpaRepository {
     private BooleanExpression ageBetween(Integer ageLoe, Integer ageGoe) {
         return ageLoe(ageLoe).and(ageGoe(ageGoe));
     }
+
+
+    public List<Member> sortByOrderSpecifier(Pageable pageable) {
+
+        JPAQuery<Member> query = queryFactory
+                .selectFrom(member);
+
+        for (Sort.Order o : pageable.getSort()) {
+            PathBuilder pathBuilder = new PathBuilder(member.getType(), member.getMetadata());
+
+            query.orderBy(new OrderSpecifier(o.isAscending() ? Order.ASC : Order.DESC,
+                    pathBuilder.get(o.getProperty())));
+        }
+
+        List<Member> result = query.fetch();
+        return result;
+    }
+
 }
