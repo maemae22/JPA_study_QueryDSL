@@ -2,6 +2,7 @@ package study.querydsl.repository;
 
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.Wildcard;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.springframework.data.domain.Page;
@@ -110,8 +111,9 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
                 .limit(pageable.getPageSize())
                 .fetch();
 
-        JPAQuery<Member> countQuery = queryFactory
-                .select(member)
+        JPAQuery<Long> countQuery = queryFactory
+//                .select(Wildcard.count) // select count(*)
+                .select(member.count()) // select count(member.id)
                 .from(member)
                 .leftJoin(member.team, team)
                 .where(
@@ -124,7 +126,8 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
 //        return new PageImpl<>(content, pageable, total);
 
 //        return PageableExecutionUtils.getPage(content, pageable, ()->countQuery.fetchCount());
-        return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchCount);
+//        return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchCount);
+        return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchOne);
     }
 
     private BooleanExpression usernameEq(String username) {
