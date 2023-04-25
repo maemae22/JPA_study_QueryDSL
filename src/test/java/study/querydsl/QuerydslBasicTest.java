@@ -749,4 +749,107 @@ public class QuerydslBasicTest {
         return usernameEq(usernameCond).and(ageEq(ageCond));
     }
 
+    @Test
+    public void bulkUpdate() {
+
+        // member1 = 10 -> DB member1
+        // member2 = 20 -> DB member2
+        // member3 = 30 -> DB member3
+        // member4 = 40 -> DB member4
+
+        long count = queryFactory
+                .update(member)
+                .set(member.username, "비회원")
+                .where(member.age.lt(28))
+                .execute();
+
+        // 1 member1 = 10 -> 1 DB 비회원
+        // 2 member2 = 20 -> 2 DB 비회원
+        // 3 member3 = 30 -> 3 DB member3 (유지)
+        // 4 member4 = 40 -> 4 DB member4 (유지)
+
+        System.out.println("----------- bulk 연산 직후 / em.flush, clear 전 1 -----------");
+        List<Member> result = queryFactory
+                .selectFrom(member)
+                .fetch();
+
+        for (Member member : result) {
+            System.out.println("member = " + member);
+        }
+        System.out.println("----------- bulk 연산 직후 / em.flush, clear 전 2 -----------");
+
+        /*
+        member = Member(id=3, username=member1, age=10) // DB랑 다름 (영속성 컨텍스트)
+        member = Member(id=4, username=member2, age=20) // DB랑 다름 (영속성 컨텍스트)
+        member = Member(id=5, username=member3, age=30)
+        member = Member(id=6, username=member4, age=40)
+         */
+
+        // 따라서 벌크 연산 후에는 꼭 flush, clear을 해주자 !
+        em.flush();
+        em.clear();
+
+        System.out.println("----------- em.flush, clear 후 1 -----------");
+        List<Member> result2 = queryFactory
+                .selectFrom(member)
+                .fetch();
+
+        for (Member member2 : result2) {
+            System.out.println("member2 = " + member2);
+        }
+        System.out.println("----------- em.flush, clear 후 2 -----------");
+
+        /*
+        member2 = Member(id=3, username=비회원, age=10) // DB랑 동일해짐
+        member2 = Member(id=4, username=비회원, age=20) // DB랑 동일해짐
+        member2 = Member(id=5, username=member3, age=30)
+        member2 = Member(id=6, username=member4, age=40)
+         */
+
+        assertThat(count).isEqualTo(2);
+    }
+
+    @Test
+    public void bulkAdd() {
+
+        long count = queryFactory
+                .update(member)
+//                .set(member.age, member.age.add(1))
+                .set(member.age, member.age.add(-1))
+//                .set(member.age, member.age.multiply(2))
+                .execute();
+    }
+
+    @Test
+    public void bulkDelete() {
+
+        long count = queryFactory
+                .delete(member)
+                .where(member.age.gt(18))
+                .execute();
+
+        System.out.println("----------- bulk 연산 직후 / em.flush, clear 전 1 -----------");
+        List<Member> result = queryFactory
+                .selectFrom(member)
+                .fetch();
+
+        for (Member member : result) {
+            System.out.println("member = " + member);
+        }
+        System.out.println("----------- bulk 연산 직후 / em.flush, clear 전 2 -----------");
+
+//        em.flush();
+//        em.clear();
+
+        System.out.println("----------- em.flush, clear 후 1 -----------");
+        List<Member> result2 = queryFactory
+                .selectFrom(member)
+                .fetch();
+
+        for (Member member2 : result2) {
+            System.out.println("member2 = " + member2);
+        }
+        System.out.println("----------- em.flush, clear 후 2 -----------");
+    }
+
 }
