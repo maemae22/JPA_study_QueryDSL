@@ -852,4 +852,44 @@ public class QuerydslBasicTest {
         System.out.println("----------- em.flush, clear 후 2 -----------");
     }
 
+    @Test
+    public void sqlFunction() {
+
+        List<String> result = queryFactory
+                .select(Expressions.stringTemplate(
+                        "function('replace', {0}, {1}, {2})", member.username, "member", "M"))
+                .from(member)
+                .fetch();
+
+        for (String username : result) {
+            System.out.println("username = " + username);
+        }
+
+        // select function('replace', member1.username, 'member'1, 'M'2) from Member member1
+        /*
+        username = M1
+        username = M2
+        username = M3
+        username = M4
+         */
+    }
+
+    @Test
+    public void sqlFunction2() {
+
+        List<String> result = queryFactory
+                .select(member.username)
+                .from(member)
+//                .where(member.username.eq(
+//                        Expressions.stringTemplate("function('lower', {0})", member.username)))
+                .where(member.username.eq(member.username.lower()))
+                .fetch();
+
+        for (String username : result) {
+            System.out.println("username = " + username);
+        }
+    }
+
+
+
 }
